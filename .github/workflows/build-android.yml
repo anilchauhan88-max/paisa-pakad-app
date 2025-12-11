@@ -1,0 +1,83 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'android/**'
+      - 'package.json'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Create .env file
+      run: |
+        echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+        echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+        echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+        echo "BACKEND_URL=${{ secrets.BACKEND_URL }}" >> .env
+
+    - name: Generate keystore
+      run: |
+        cd android/app
+        keytool -genkeypair -v -storetype PKCS12 \
+          -keystore paisa-pakad-release.keystore \
+          -alias paisa-pakad \
+          -keyalg RSA -keysize 2048 -validity 10000 \
+          -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
+          -keypass ${{ secrets.KEYSTORE_PASSWORD }} \
+          -dname "CN=Paisa Pakad, OU=Mobile, O=Paisa Pakad, L=Mumbai, ST=Maharashtra, C=IN"
+
+    - name: Create gradle.properties
+      run: |
+        cd android
+        echo "MYAPP_UPLOAD_STORE_FILE=paisa-pakad-release.keystore" >> gradle.properties
+        echo "MYAPP_UPLOAD_KEY_ALIAS=paisa-pakad" >> gradle.properties
+        echo "MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
+        echo "MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
+
+    - name: Build APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleRelease
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: paisa-pakad-app
+        path: android/app/build/outputs/apk/release/app-release.apk
+
+    - name: Create Release
+      if: github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: Paisa Pakad v1.0.${{ github.run_number }}
+        files: android/app/build/outputs/apk/release/app-release.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
