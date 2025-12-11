@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Paisa Pakad",
+    "slug": "paisa-pakad",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4CAF50"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.paisapakad.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need camera access to scan bills and receipts",
+        "NSPhotoLibraryUsageDescription": "We need photo library access to save scanned bills"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4CAF50"
+      },
+      "package": "com.paisapakad.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_SMS",
+        "RECEIVE_SMS",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Paisa Pakad to access your camera to scan bills"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "paisa-pakad-app"
+      }
+    }
+  }
+}
